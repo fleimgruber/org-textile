@@ -94,12 +94,12 @@
   :menu-entry
   '(?x "Export to Textile"
        ((?x "As Textile buffer"
-	    (lambda (a s v b) (org-textile-export-as-textile a s v)))
+        (lambda (a s v b) (org-textile-export-as-textile a s v)))
 	(?X "As Textile file"
-	    (lambda (a s v b) (org-textile-export-to-textile a s v)))
+        (lambda (a s v b) (org-textile-export-to-textile a s v)))
 	(?o "As Textile file and open"
-	    (lambda (a s v b)
-	      (if a (org-textile-export-to-textile t s v)
+        (lambda (a s v b)
+          (if a (org-textile-export-to-textile t s v)
 		(org-open-file (org-textile-export-to-textile nil s v))))))))
 
 
@@ -128,11 +128,16 @@ CONTENTS is its contents, as a string or nil.  INFO is ignored."
   "Transcode HEADLINE element into Textile format.
 CONTENTS is the headline contents."
   (let* ((level (org-export-get-relative-level headline info))
-	 (title (org-export-data (org-element-property :title headline) info))
-	 (limit (plist-get info :headline-levels)))
-    (if (org-export-low-level-p headline info)
+         (title (org-export-data (org-element-property :title headline) info))
+         (limit (plist-get info :headline-levels))
+         (tags (and (plist-get info :with-tags)
+                    (let ((tag-list (org-export-get-tags headline info)))
+                      (and tag-list
+                           (format "     :%s:"
+                                   (mapconcat 'identity tag-list ":")))))))
+        (if (org-export-low-level-p headline info)
 	(concat (make-string (- level limit) ?*) " " title "\n" contents)
-      (concat "\nh" (number-to-string (1+ level)) ". " title "\n\n" contents))))
+      (concat "\nh" (number-to-string (1+ level)) ". " title " " tags "\n\n" contents))))
 
 
 ;;; List
@@ -147,8 +152,8 @@ contextual information."
 	(depth 0))
     (while (and (setq parent (org-export-get-parent parent))
 		(cl-case (org-element-type parent)
-		  (item t)
-		  (plain-list (cl-incf depth)))))
+          (item t)
+          (plain-list (cl-incf depth)))))
     depth))
 
 (defvar org-textile-list-bullets
@@ -157,9 +162,9 @@ contextual information."
 
 (defun org-textile-list-item-delimiter (item)
   (let* ((plain-list (org-export-get-parent item))
-	 (type (org-element-property :type plain-list))
-	 (depth (org-textile-item-list-depth item))
-	 (bullet (cdr (assq type org-textile-list-bullets))))
+     (type (org-element-property :type plain-list))
+     (depth (org-textile-item-list-depth item))
+     (bullet (cdr (assq type org-textile-list-bullets))))
     (when bullet
      (make-string depth bullet))))
 
@@ -233,8 +238,8 @@ Org's LINK object is documented in \"Hyperlinks\"."
   value if and only if \"with-key\" is set to t."
   (let ((withkey (org-textile-make-withkey key)))
     (and withkey
-	 (plist-get info withkey)
-	 (org-export-data (plist-get info key) info))))
+     (plist-get info withkey)
+     (org-export-data (plist-get info key) info))))
 
 (defun org-textile-info-get (info key)
   (org-export-data (plist-get info key) info))
